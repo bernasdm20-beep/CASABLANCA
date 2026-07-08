@@ -294,7 +294,8 @@ var DIAS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 // ─── INIT ───────────────────────────────────────────────
 window.onload = function() { carregarConfig(); };
 
-function carregarConfig() {
+function carregarConfig(tentativa) {
+  tentativa = tentativa || 1;
   fetch(SCRIPT_URL + '?acao=config')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -303,8 +304,13 @@ function carregarConfig() {
       atualizarHeroSub();
     })
     .catch(function() {
-      document.getElementById('step1Content').innerHTML =
-        '<div class="empty-state">Erro ao carregar. Tenta novamente mais tarde.</div>';
+      if (tentativa < 3) {
+        // Falha de rede pontual - tenta outra vez automaticamente antes de desistir
+        setTimeout(function() { carregarConfig(tentativa + 1); }, 1200);
+      } else {
+        document.getElementById('step1Content').innerHTML =
+          '<div class="empty-state">Erro ao carregar. Tenta novamente mais tarde.</div>';
+      }
     });
 }
 
@@ -396,7 +402,8 @@ function selecionarData(dataISO, dataLabel) {
   carregarHoras(dataISO);
 }
 
-function carregarHoras(dataISO) {
+function carregarHoras(dataISO, tentativa) {
+  tentativa = tentativa || 1;
   var loading = document.getElementById('timeLoading');
   var grid = document.getElementById('timeGrid');
   loading.style.display = 'block';
@@ -424,8 +431,12 @@ function carregarHoras(dataISO) {
       grid.innerHTML = html;
     })
     .catch(function() {
-      loading.style.display = 'none';
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Erro ao carregar horários.</div>';
+      if (tentativa < 3) {
+        setTimeout(function() { carregarHoras(dataISO, tentativa + 1); }, 1200);
+      } else {
+        loading.style.display = 'none';
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Erro ao carregar horários.</div>';
+      }
     });
 }
 
